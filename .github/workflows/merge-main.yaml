@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       package_version: ${{ steps.release.outputs.package_version }}
+    env:
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
     steps:
     - uses: actions/checkout@v3
 
