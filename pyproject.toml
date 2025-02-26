@@ -12,11 +12,16 @@ seaborn = "^0.13.2"
 pandas = "^2.2.3"
 scikit-learn = "^1.6.0"
 requests = "^2.32.3"
-
+uvicorn = "^0.34.0"
+fastapi = "^0.115.7"
+toml = "^0.10.2"
+pytest = "^8.3.4"
+pytest-mock = "^3.6.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-
-
+[tool.poetry.scripts]
+start-server-dev = "dtw_lab.lab2:run_server(port=8000,reload=True)"
+start-server = "dtw_lab.lab2:run_server(reload=False,host='0.0.0.0')"

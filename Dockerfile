@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12
 
 # Install system dependencies, including Git and gnupg
 RUN apt-get update && apt-get install -y \
@@ -21,11 +21,14 @@ WORKDIR /app
 # Copy the poetry.lock and pyproject.toml files
 COPY poetry.lock pyproject.toml ./
 
-# Install project dependencies
+# Install project dependencies without the code
 RUN poetry install --no-root
 
 # Copy the rest of the project
 COPY . .
 
+# Install the project and its modules
+RUN poetry install
+
 # Run the application
-CMD ["poetry", "run", "python", "main.py"]
+ENTRYPOINT ["poetry", "run", "start-server"]
