@@ -1,0 +1,108 @@
+name: Merge to Main Worflow
+run-name: "Release, Deploy and E2E Test by @${{ github.actor }}"
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - "*.md"
+env:
+  LOGIN_SERVER: ${{ secrets.LOGIN_SERVER }}
+  TEAM_NUMBER: ${{ vars.TEAM_NUMBER }}
+  RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+permissions: read-all
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      package_version: ${{ steps.release.outputs.package_version }}
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Run unit tests
+      run: poetry run pytest 
+
+    - name: Build Docker image
+      run: scripts/build.sh
+
+    - name: Run integration tests
+      run: scripts/integration_test.sh
+
+    - name: Release
+      run: scripts/release.sh
+
+  deploy-to-dev:
+    runs-on: ubuntu-latest
+    needs: release
+    environment: development
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+      PACKAGE_VERSION: ${{ needs.release.outputs.package_version }}
+      
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Deploy to Dev
+      run: scripts/deploy.sh
+  
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: deploy-to-dev
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run E2E tests
+      run: scripts/e2e_test.sh
