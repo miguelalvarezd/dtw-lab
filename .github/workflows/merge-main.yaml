@@ -15,7 +15,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
-      package_version: ${{ steps.release.outputs.package_version }}
+      package-version: ${{ steps.release.outputs.package-version }}
     env:
       REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
       REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
@@ -51,6 +51,7 @@ jobs:
       run: scripts/integration_test.sh
 
     - name: Release
+      id: release
       run: scripts/release.sh
 
   deploy-to-dev:
@@ -64,7 +65,7 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
       REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-      PACKAGE_VERSION: ${{ needs.release.outputs.package_version }}
+      PACKAGE_VERSION: ${{ needs.release.outputs.package-version }}
       
     steps:
     - uses: actions/checkout@v3
