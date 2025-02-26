@@ -1,7 +1,7 @@
-name: Merge to Main Worflow
+name: Merge to Main Workflow
 run-name: "Release, Deploy and E2E Test by @${{ github.actor }}"
 on:
-  pull_request:
+  push:
     branches:
       - main
     paths-ignore:
@@ -10,15 +10,15 @@ env:
   LOGIN_SERVER: ${{ secrets.LOGIN_SERVER }}
   TEAM_NUMBER: ${{ vars.TEAM_NUMBER }}
   RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+  REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+  REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
 permissions: read-all
 jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
       package-version: ${{ steps.release.outputs.package-version }}
-    env:
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      
     steps:
     - uses: actions/checkout@v3
 
@@ -60,28 +60,10 @@ jobs:
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
       PACKAGE_VERSION: ${{ needs.release.outputs.package-version }}
       
     steps:
     - uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-
-    - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-    - name: Install dependencies
-      run: poetry install
-
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
 
     - name: Deploy to Dev
       run: scripts/deploy.sh
@@ -91,19 +73,6 @@ jobs:
     needs: deploy-to-dev
     steps:
     - uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-
-    - name: Install Poetry
-      run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-    - name: Install dependencies
-      run: poetry install
 
     - name: Run E2E tests
       run: scripts/e2e_test.sh

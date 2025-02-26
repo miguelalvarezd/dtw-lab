@@ -1,4 +1,4 @@
-name: Feature Branches & PR Opening Worflow
+name: Feature Branches & PR Opening Workflow
 run-name: "Build and Test by @${{ github.actor }}"
 on:
   pull_request:
